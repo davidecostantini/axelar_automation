@@ -1,0 +1,93 @@
+replicaCount: 1
+
+network: "mainnet"
+homedir: "/data/axelard"
+nodeMoniker: "test-node1"
+
+initContainer:
+  repository: ubuntu
+  tag: latest
+
+  runCommands:
+    - apt-get update -y
+    - apt-get install git curl -y
+    - git clone https://github.com/axelarnetwork/axelarate-community.git /data/git-axelarate-community
+    - mkdir -p $AXELARD_HOME/config
+    - chown -R 1000 $AXELARD_HOME
+    - cp git-axelarate-community/configuration/config.toml axelard/config/
+    - cp git-axelarate-community/resources/mainnet/seeds.toml  axelard/config/
+    - cp git-axelarate-community/resources/mainnet/genesis.json   axelard/config/
+    - SEEDS=$(cat "$AXELARD_HOME/config/seeds.toml" | grep address | awk '{print $3}' | tr -d '\n' | sed 's/""/,/g' | sed 's/^/seeds = /')
+    - sed -i.bak "s/seeds = \"\"/$SEEDS/" "$AXELARD_HOME/config/config.toml"
+
+axelarNode:
+  repository: axelarnet/axelar-core
+  tag: v1.2.1
+
+  pullPolicy: IfNotPresent
+
+  volumeSize: 10Gi
+
+  runCommands:
+    - echo "Starting Axelar..."
+    - axelard start --home $AXELARD_HOME
+
+  ports:
+    - name: api
+      containerPort: 1317
+      protocol: TCP
+    - name: p2p1
+      containerPort: 26656
+      protocol: TCP
+    - name: p2p2
+      containerPort: 26657
+      protocol: TCP
+    - name: p2p3
+      containerPort: 26658
+      protocol: TCP
+    - name: rpc
+      containerPort: 26660
+      protocol: TCP
+    - name: metrics
+      containerPort: 9090
+      protocol: TCP
+
+service:
+  type: LoadBalancer
+
+  ports:
+    - name: api
+      port: 1317
+      targetPort: 1317
+      protocol: TCP
+    - name: p2p1
+      port: 26656
+      targetPort: 26656
+      protocol: TCP
+    - name: p2p2
+      port: 26657
+      targetPort: 26657
+      protocol: TCP
+    - name: p2p3
+      port: 26658
+      targetPort: 26658
+      protocol: TCP
+    - name: rpc
+      port: 26660
+      targetPort: 26660
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+
+
+env:
+  - name: AXELARD_HOME
+    value: "{{ .Values.homedir }}"
+  - name: AXELARD_NETWORK
+    value: "{{ .Values.network }}"
+  - name: AXELARD_MONIKER
+    value: "{{ .Values.nodeMoniker }}"
+  - name: AXELARD_PEERS
+    value: "{{ .Values.peers }}"

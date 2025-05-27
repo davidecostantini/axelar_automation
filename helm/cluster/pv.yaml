@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: snapshot-pv
+spec:
+  capacity:
+    storage: 500Gi
+  storageClassName: ""
+  accessModes:
+    - ReadOnlyMany #ReadWriteOnce
+  hostPath:
+    path: /mnt/snapshot
+  persistentVolumeReclaimPolicy: Retain
