@@ -4,6 +4,11 @@ This is a simple script to deploy an axelar node on kubernetes with an helm char
 It's customisable with variables in `values.yaml` and uses an InitContainer to configure the pod but currently it's just a basic script and is not production grade as it doesn't supports aspects like persistent volumes, network snapshot, etc...
 An example of a K8S configuration for a persistent volume can be found in the cluster directory
 
+```
+# To deploy a node just run
+helm install axelar helm/node
+```
+
 ## Phases to deploy a Validator
 
 ### 1) Configuration
